@@ -1,6 +1,6 @@
 .idea*
 *.pyc
 venv/
-*.spyderproject*
+*.spyderproject/
 *20news-bydate*
 *x28.txt

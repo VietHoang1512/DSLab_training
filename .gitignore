@@ -1,6 +1,6 @@
-.idea*
+.idea/*
 *.pyc
 venv/
-**/.spyproject
-**/20news-bydate
+**/.spyproject/
+**/20news-bydate/
 *.txt

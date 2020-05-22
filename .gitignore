@@ -2,5 +2,5 @@
 *.pyc
 venv/
 **/.spyproject
-**/20news-bydate
-**.txt
+**/20news-bydate/
+*.txt

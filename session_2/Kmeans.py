@@ -2,20 +2,25 @@ from collections import defaultdict
 import numpy as np
 import random
 
+
 class Member:
-    def __init__(self, r_d, label = None, doc_id = None):
+    def __init__(self, r_d, label=None, doc_id=None):
         self._r_d = r_d
         self._label = label
         self._doc_id = doc_id
-    
+
+
 class Cluster:
     def __init__(self):
         self._centroid = None
         self._members = []
+
     def reset_members(self):
         self._members = []
+
     def add_member(self, member):
         self._members.append(member)
+
 
 class Kmeans:
     def __init__(self, num_clusters):
@@ -23,29 +28,31 @@ class Kmeans:
         self._clusters = [Cluster() for i in range(self._num_clusters)]
         self._E = []
         self._S = []
-    def load_data(self, data_path):
 
-        def sparse_to_dense(sparse_r_d, vocab_size):    
+    def load_data(self, data_path):
+        def sparse_to_dense(sparse_r_d, vocab_size):
 
             r_d = [0.0 for _ in range(vocab_size)]
             indices_tfidfs = sparse_r_d.split()
             for index_tfidf in indices_tfidfs:
-                index = int(index_tfidf.split(':')[0]) #
-                tfidf = float(index_tfidf.split(':')[1])
+                index = int(index_tfidf.split(":")[0])  #
+                tfidf = float(index_tfidf.split(":")[1])
                 r_d[index] = tfidf
             return np.array(r_d)
+
         with open(data_path) as f:
             d_lines = f.read().splitlines()
-        with open('./20news-bydate/words_idfs.txt') as f:
+        with open("./20news-bydate/words_idfs.txt") as f:
             vocab_size = len(f.read().splitlines())
-        self._data = []     #list of Member
+        self._data = []  # list of Member
         self._label_count = defaultdict(int)
         for data_id, d in enumerate(d_lines):
-            features = d.split('<fff>')
+            features = d.split("<fff>")
             label, doc_id = int(features[0]), int(features[1])
             self._label_count[label] += 1
-            r_d = sparse_to_dense(sparse_r_d = features[2], vocab_size = vocab_size)
-            self._data.append(Member(r_d= r_d, label= label, doc_id= doc_id))
+            r_d = sparse_to_dense(sparse_r_d=features[2], vocab_size=vocab_size)
+            self._data.append(Member(r_d=r_d, label=label, doc_id=doc_id))
+
     def random_init(self, seed_value):
 
         member_r_ds = [member._r_d for member in self._data]
@@ -53,10 +60,16 @@ class Kmeans:
         centroids = random.sample(member_r_ds, self._num_clusters)
         for i in range(self._num_clusters):
             self._clusters[i]._centroid = centroids[i]
+
     def compute_similarity(self, member, centroid):
 
         member_r_d = np.array(member._r_d)
-        return np.sum(member_r_d * centroid) / (np.sqrt(np.sum(member_r_d * member_r_d) * np.sqrt(np.sum(centroid * centroid))))
+        return np.sum(member_r_d * centroid) / (
+            np.sqrt(
+                np.sum(member_r_d * member_r_d) * np.sqrt(np.sum(centroid * centroid))
+            )
+        )
+
     def select_cluster_for(self, member):
 
         best_fit_cluster = False
@@ -68,23 +81,27 @@ class Kmeans:
                 max_similarity = similarity
         best_fit_cluster.add_member(member)
         return max_similarity
+
     def update_centroid_of(self, cluster):
 
         member_r_ds = [member._r_d for member in cluster._members]
-        aver_r_d = np.mean(member_r_ds, axis = 0)
+        aver_r_d = np.mean(member_r_ds, axis=0)
         sqrt_sum_sqr = np.sqrt(np.sum(aver_r_d ** 2))
-        new_centroid = np.array([value / sqrt_sum_sqr for value in aver_r_d])       #formula ?
+        new_centroid = np.array(
+            [value / sqrt_sum_sqr for value in aver_r_d]
+        )  # formula ?
         cluster._centroid = new_centroid
+
     def stopping_condition(self, criterion, threshold):
 
-        criteria = ['centroid', 'similarity', 'max_iters']
+        criteria = ["centroid", "similarity", "max_iters"]
         assert criterion in criteria
-        if criterion == 'max_iters':
+        if criterion == "max_iters":
             if self._iteration >= threshold:
                 return True
             else:
                 return False
-        elif criterion == 'centroid':
+        elif criterion == "centroid":
             E_new = [list(cluster._centroid) for cluster in self._clusters]
             E_new_minus_E = [centroid for centroid in E_new if centroid not in self._E]
             self._E = E_new
@@ -99,6 +116,7 @@ class Kmeans:
                 return True
             else:
                 return False
+
     def run(self, seed_value, criterion, threshold):
 
         self.random_init(seed_value)
@@ -123,24 +141,26 @@ class Kmeans:
             member_labels = [member._label for member in cluster._members]
             max_count = max([member_labels.count(label) for label in range(20)])
             majority_sum += max_count
-        return majority_sum * 1. / len(self._data)
+        return majority_sum * 1.0 / len(self._data)
+
     def compute_NMI(self):
-        I_value, H_omega, H_C, N = 0., 0., 0., len(self._data)
+        I_value, H_omega, H_C, N = 0.0, 0.0, 0.0, len(self._data)
         for cluster in self._clusters:
-            wk = len(cluster._members) * 1.
-            H_omega += - wk / N * np.log10(wk / N)
+            wk = len(cluster._members) * 1.0
+            H_omega += -wk / N * np.log10(wk / N)
             member_labels = [member._label for member in cluster._members]
             for label in range(20):
-                wk_cj = member_labels.count(label) * 1.
+                wk_cj = member_labels.count(label) * 1.0
                 cj = self._label_count[label]
                 I_value += wk_cj / N * np.log10(N * wk_cj / (wk * cj) + 1e-12)
         for label in range(20):
-            cj = self._label_count[label] * 1.
-            H_C += - cj / N * np.log10(cj / N)
-        return I_value * 2. / (H_omega + H_C)
-  
+            cj = self._label_count[label] * 1.0
+            H_C += -cj / N * np.log10(cj / N)
+        return I_value * 2.0 / (H_omega + H_C)
+
+
 kmeans = Kmeans(20)
-kmeans.load_data('./20news-bydate/words_tfidf.txt')
-kmeans.run(3, 'max_iters', 500)
-print('Purity = ', kmeans.compute_purity())
-print('NMI = ', kmeans.compute_NMI()) 
+kmeans.load_data("./20news-bydate/words_tfidf.txt")
+kmeans.run(3, "max_iters", 500)
+print("Purity = ", kmeans.compute_purity())
+print("NMI = ", kmeans.compute_NMI())

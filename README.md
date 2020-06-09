@@ -3,4 +3,4 @@
   * [x] Linear Regression
   * [x] Triển khai Kmeans
   * [x] Triển khai MLP
-  * [ ] Triển khai RNNs
+  * [x] Triển khai RNNs

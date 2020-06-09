@@ -4,3 +4,4 @@ venv/
 **/.spyproject/
 **/20news-bydate/
 *.txt
+**/w2v
